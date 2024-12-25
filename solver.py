@@ -1,119 +1,87 @@
-board=[
-       [7,8,0,4,0,0,1,2,0],
-       [6,0,0,0,7,5,0,0,9],
-       [0,0,0,6,0,1,0,7,8],
-       [0,0,7,0,4,0,2,6,0],
-       [0,0,1,0,5,0,9,3,0],
-       [9,0,4,0,6,0,0,0,5],
-       [0,7,0,3,0,0,0,1,2],
-       [1,2,0,0,0,7,4,0,0],
-       [0,4,9,2,0,6,0,0,7]
-       ]
-def is_empty(board):
+puzzle = [
+    [7, 8, 0, 4, 0, 0, 1, 2, 0],
+    [6, 0, 0, 0, 7, 5, 0, 0, 9],
+    [0, 0, 0, 6, 0, 1, 0, 7, 8],
+    [0, 0, 7, 0, 4, 0, 2, 6, 0],
+    [0, 0, 1, 0, 5, 0, 9, 3, 0],
+    [9, 0, 4, 0, 6, 0, 0, 0, 5],
+    [0, 7, 0, 3, 0, 0, 0, 1, 2],
+    [1, 2, 0, 0, 0, 7, 4, 0, 0],
+    [0, 4, 9, 2, 0, 6, 0, 0, 7]
+]
+
+def find_empty_cell(grid):
     """
-    
-
-    Parameters
-    ----------
-    board :is list of lists 
-        DESCRIPTION.
-        representing the soduku grid
-
-    Returns
-    -------
-    i : integer
-        DESCRIPTION.
-        the row of the empty position
-    j : integer
-        DESCRIPTION.
-        the col of the empty position
+    Finds the first empty position (0) in the Sudoku grid.
+    Returns None if there are no empty positions.
     """
     for i in range(9):
         for j in range(9):
-            if board[i][j] == 0:
+            if grid[i][j] == 0:
                 return (i, j)
     return None
 
 
-def is_valid(board,pos,num):
+def is_move_valid(grid, position, num, row_sets, col_sets, block_sets):
     """
+    Checks if a number can be placed at a given position.
+    Uses sets to track numbers already used in rows, columns, and subgrids.
+    """
+    row, col = position
+    block_index = (row // 3) * 3 + (col // 3)
     
-
-    Parameters
-    ----------
-    board : list of lists
-        DESCRIPTION.
-        the Suduku grid
-    pos : tulipe
-        DESCRIPTION.
-        representing two integers that represent the position
-    num : integer
-        DESCRIPTION.
-        possible integer to fill into the empty position
-
-    Returns
-    -------
-    bool
-        DESCRIPTION.
-        true if that num is possible in the pos position 
-        false if it is not
-
-    """
-    for i in range(9):
-        if board[pos[0]][i] == num and pos[0] != i:
-            return False
-    for i in range(9):
-        if board[i][pos[1]] == num and pos[1] != i:
-            return False
-    for i in range(pos[0]//3*3, pos[0]//3*3+3):
-        for j in range(pos[1]//3*3, pos[1]//3*3+3):
-            if board[i][j] == num and (i, j) != pos:
-                return False
+    if num in row_sets[row] or num in col_sets[col] or num in block_sets[block_index]:
+        return False
     return True
 
 
-def solve(board):
+def solve_sudoku(grid):
     """
-    Parameters
-    ----------
-    board : list of lists
-        DESCRIPTION.
-        the sudoku board 
-    Returns
-    -------
-    bool
-        DESCRIPTION.
-        true if the board is solved 
-        false if there are empty position
-
+    Solves the Sudoku puzzle using backtracking.
+    Returns True if the board is solved, False if unsolvable.
     """
-    empty = is_empty(board)
-    if empty:
-        row, col = empty
-    else:
-        return True
-    for k in range(1, 10):
-        if is_valid(board, (row, col), k):
-            board[row][col] = k
-            if solve(board):
-                return True
-            board[row][col] = 0
-    return False
+    row_sets = [set() for _ in range(9)]
+    col_sets = [set() for _ in range(9)]
+    block_sets = [set() for _ in range(9)]
     
-        
-def print_board(board):
+    # Initialize sets with existing numbers
+    for i in range(9):
+        for j in range(9):
+            if grid[i][j] != 0:
+                row_sets[i].add(grid[i][j])
+                col_sets[j].add(grid[i][j])
+                block_sets[(i // 3) * 3 + (j // 3)].add(grid[i][j])
+
+    empty_cell = find_empty_cell(grid)
+    if not empty_cell:
+        return True  # No empty cells left
+    
+    row, col = empty_cell
+    
+    for num in range(1, 10):
+        if is_move_valid(grid, (row, col), num, row_sets, col_sets, block_sets):
+            # Place the number
+            grid[row][col] = num
+            row_sets[row].add(num)
+            col_sets[col].add(num)
+            block_sets[(row // 3) * 3 + (col // 3)].add(num)
+            
+            # Recursively try to solve the board
+            if solve_sudoku(grid):
+                return True
+            
+            # Undo the move if it leads to no solution
+            grid[row][col] = 0
+            row_sets[row].remove(num)
+            col_sets[col].remove(num)
+            block_sets[(row // 3) * 3 + (col // 3)].remove(num)
+    
+    return False
+
+
+def display_board(grid):
     """
-
-    Parameters
-    ----------
-    board : list of lists
-        DESCRIPTION.
-        board of the sudoku
-    Returns
-    -------
-    None.
-    it prints the sudoku board
-
+    Prints the Sudoku board in a readable format.
     """
     for i in range(9):
         if i % 3 == 0 and i != 0:
@@ -122,18 +90,15 @@ def print_board(board):
             if j % 3 == 0:
                 print(" | ", end="")
             if j == 8:
-                print(board[i][j], end="\n")
+                print(grid[i][j], end="\n")
             else:
-                print(str(board[i][j]) + " ", end="")
+                print(str(grid[i][j]) + " ", end="")
 
-
-            
-    
-    
-    
-
-print_board(board)
-solve(board)   
-print('\n')
-print("solved board")
-print_board(board)
+# Solve and print the solved board
+print("Original Puzzle:")
+display_board(puzzle)
+if solve_sudoku(puzzle):
+    print("\nSolved Puzzle:")
+    display_board(puzzle)
+else:
+    print("\nNo solution exists.")
