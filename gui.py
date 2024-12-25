@@ -1,4 +1,3 @@
-# GUI.py
 import pygame
 import time
 pygame.font.init()
@@ -30,7 +29,7 @@ class Grid:
 
     def update_model(self):
         self.model = [[self.cubes[i][j].value for j in range(self.cols)] for i in range(self.rows)]
-    #sets a final value
+
     def place(self, val):
         row, col = self.selected
         if self.cubes[row][col].value == 0:
@@ -43,8 +42,9 @@ class Grid:
                 self.cubes[row][col].set(0)
                 self.cubes[row][col].set_temp(0)
                 self.update_model()
+                
                 return False
-    #sets a temporary value
+
     def sketch(self, val):
         row, col = self.selected
         self.cubes[row][col].set_temp(val)
@@ -237,11 +237,11 @@ def redraw_window(win, board, time, strikes):
     # Draw time
     fnt = pygame.font.SysFont("comicsans", 40)
     text = fnt.render("Time: " + format_time(time), 1, (0,0,0))
-    win.blit(text, (540 - 160, 560))
-    # Draw Strikes
-    text = fnt.render("X " * strikes, 1, (255, 0, 0))
-    win.blit(text, (20, 560))
+
+    win.blit(text, (540 - text.get_width() - 20, 550))
+
     # Draw grid and board
+     
     board.draw()
 
 
@@ -250,8 +250,7 @@ def format_time(secs):
     minute = secs//60
     hour = minute//60
 
-    mat = " " + str(minute) + ":" + str(sec)
-    return mat
+    return f"{hour}:{minute}:{sec:02d}"
 
 
 def main():
